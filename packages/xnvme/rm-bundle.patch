@@ -1,0 +1,62 @@
+diff --git a/lib/meson.build b/lib/meson.build
+index 60e5d70f..f4ce3ea5 100644
+--- a/lib/meson.build
++++ b/lib/meson.build
+@@ -122,56 +122,9 @@ xnvmelib_static = static_library(
+   install: true,
+ )
+ 
+-# Produce a static library containing xNVMe, liburing, and SPDK
+-bundle_lib_paths = []
+-bundle_lib_paths += [ 'lib' / 'libxnvme-static.a' ]
+-
+-if conf_data.get('XNVME_BE_LINUX_VFIO_ENABLED')
+-  bundle_lib_paths += ['subprojects' / 'libvfn' / 'src' / 'libvfn.a']
+-endif
+-
+-foreach blib : xnvmelib_deps_bundle
+-  if get_option('build_subprojects') and blib.found()
+-    bundle_lib_paths += blib.get_variable(internal: 'lib_paths').split(' ')
+-  endif
+-endforeach
+-
+-xnvmelib_bundle_depends = [xnvmelib_static]
+-
+-if conf_data.get('XNVME_BE_LINUX_VFIO_ENABLED')
+-  # custom targets cannot depend on dependency() objects, so depend on the
+-  # library build target from the subproject.
+-  xnvmelib_bundle_depends += subproject('libvfn').get_variable('vfn_lib')
+-endif
+-
+-# missing xnvme and liburing, howto find / produce absolute paths to these?
+-xnvmelib_bundle = custom_target(
+-  'xnvme',
+-  build_by_default: true,
+-  depends: xnvmelib_bundle_depends,
+-  command: [ prog_python, '@INPUT@', '--output', '@OUTPUT@', '--libs' ] + bundle_lib_paths,
+-  input: tb_library_bundler,
+-  output: 'libxnvme.a',
+-  install_dir: xnvmelib_libdir,
+-  install: true,
+-)
+-
+-# We create this as a target to be consumed by pkgconfig, potentially also for the xnvme-cli-tools,
+-# although they currently link "directly" to the regular static library
+-xnvmelib_bundle_dep = declare_dependency(
+-  dependencies: xnvmelib_deps,
+-  link_args: conf_data.get('XNVME_BE_SPDK_ENABLED') ? [
+-    '-Wl,--whole-archive',
+-    '-Wl,--no-as-needed',
+-    '-lxnvme',
+-    '-Wl,--no-whole-archive',
+-    '-Wl,--as-needed',
+-  ] : [ '-lxnvme' ]
+-)
+-
+ # pkg-config -- describing how to consume the xNVMe library
+ pconf.generate(
+-  libraries: [xnvmelib_bundle_dep] + [xnvmelib_deps_shared],
++  libraries: [xnvmelib_deps_shared],
+   version: meson.project_version(),
+   variables: [
+     'datadir=' + get_option('prefix') / get_option('datadir') / meson.project_name()

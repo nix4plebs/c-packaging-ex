@@ -1,0 +1,13 @@
+diff --git a/meson.build b/meson.build
+index d38bf87f..13ec13f8 100644
+--- a/meson.build
++++ b/meson.build
+@@ -232,7 +232,7 @@ iokit_dep = dependency(
+   required: is_darwin
+ )
+ libvfn_dep = dependency(
+-  '_vfn',
++  'libvfn',
+   default_options: [
+     'libnvme=disabled',
+     'docs=disabled',
